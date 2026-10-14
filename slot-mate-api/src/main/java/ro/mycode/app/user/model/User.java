@@ -1,5 +1,9 @@
 package ro.mycode.app.user.model;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,11 +34,14 @@ public class User {
     private String email;
 
     @NotBlank(message="Parola obligatorie")
+    @Column(name ="password_hash", nullable = false, length = 100)
     private String passwordHash;
 
-    @Size(min=10,max=10, message="Numar invalid")
+    @Column(name = "phone", length = 20)
+    @Pattern(regexp ="^(\\\\+4|0)[0-9]{9}$" , message = "Numar de telefon invalid")
     private String phone;
 
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt=LocalDateTime.now();
 
     public enum Role{
