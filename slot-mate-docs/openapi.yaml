@@ -1,0 +1,658 @@
+openapi: 3.1.0
+info:
+  title: slot-mate API
+  version: 1.0.0
+  description: |
+    Rezervări de intervale orare la furnizori (frizerii, cabinete, săli de sport).
+    Orele sunt în ora locală (`LocalDateTime`), fără fus orar: `2026-10-20T10:00:00`.
+    Erorile au forma `ProblemDetail` (RFC 9457).
+servers:
+  - url: http://localhost:8080
+    description: local
+security:
+  - bearerAuth: []
+tags:
+  - name: auth
+    description: Cont și token JWT
+  - name: categories
+    description: Domeniile furnizorilor
+  - name: providers
+    description: Profilurile de firmă
+  - name: offerings
+    description: Serviciile unui furnizor
+  - name: slots
+    description: Intervalele orare publicate
+  - name: bookings
+    description: Rezervările
+
+paths:
+  /api/auth/register:
+    post:
+      tags: [auth]
+      summary: Creează un cont de client sau de furnizor
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: Cont creat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: Întoarce un token JWT
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Autentificat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/users/me:
+    get:
+      tags: [auth]
+      summary: Utilizatorul din token
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/categories:
+    get:
+      tags: [categories]
+      summary: Toate categoriile
+      operationId: getCategories
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CategoryResponse' }
+    post:
+      tags: [categories]
+      summary: Adaugă o categorie (ADMIN)
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryRequest' }
+      responses:
+        '201':
+          description: Creată
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/providers:
+    get:
+      tags: [providers]
+      summary: Caută furnizori
+      operationId: searchProviders
+      security: []
+      parameters:
+        - name: categoryId
+          in: query
+          schema: { type: integer, format: int64 }
+        - name: city
+          in: query
+          schema: { type: string }
+          example: Cluj-Napoca
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ProviderResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+    post:
+      tags: [providers]
+      summary: Creează profilul de firmă al utilizatorului logat (PROVIDER)
+      operationId: createMyProvider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProviderRequest' }
+      responses:
+        '201':
+          description: Creat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/providers/me:
+    get:
+      tags: [providers]
+      summary: Profilul meu de firmă (PROVIDER)
+      operationId: getMyProvider
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [providers]
+      summary: Modifică profilul meu de firmă (PROVIDER)
+      operationId: updateMyProvider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProviderRequest' }
+      responses:
+        '200':
+          description: Modificat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/providers/{providerId}:
+    get:
+      tags: [providers]
+      summary: Un furnizor
+      operationId: getProvider
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/providerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/providers/{providerId}/offerings:
+    get:
+      tags: [offerings]
+      summary: Serviciile active ale unui furnizor
+      operationId: getProviderOfferings
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/providerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/OfferingResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/offerings:
+    post:
+      tags: [offerings]
+      summary: Adaugă un serviciu la firma mea (PROVIDER)
+      operationId: createOffering
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OfferingRequest' }
+      responses:
+        '201':
+          description: Creat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OfferingResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/offerings/{offeringId}:
+    put:
+      tags: [offerings]
+      summary: Modifică un serviciu al meu (PROVIDER, proprietar)
+      operationId: updateOffering
+      parameters:
+        - $ref: '#/components/parameters/offeringId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OfferingRequest' }
+      responses:
+        '200':
+          description: Modificat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OfferingResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [offerings]
+      summary: Dezactivează un serviciu al meu (PROVIDER, proprietar)
+      operationId: deactivateOffering
+      description: Setează `active = false`; intervalele și rezervările existente rămân.
+      parameters:
+        - $ref: '#/components/parameters/offeringId'
+      responses:
+        '204':
+          description: Dezactivat
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/offerings/{offeringId}/slots:
+    get:
+      tags: [slots]
+      summary: Intervalele unui serviciu
+      operationId: getSlots
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/offeringId'
+        - name: from
+          in: query
+          required: true
+          schema: { type: string, format: date }
+          example: '2026-10-20'
+        - name: to
+          in: query
+          required: true
+          schema: { type: string, format: date }
+          example: '2026-10-26'
+        - name: available
+          in: query
+          description: '`true` = doar intervalele nerezervate'
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: OK, ordonate după `startTime`
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SlotResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [slots]
+      summary: Publică un interval pentru un serviciu al meu (PROVIDER, proprietar)
+      operationId: createSlot
+      description: '`endTime` = `startTime` + `durationMinutes` al serviciului.'
+      parameters:
+        - $ref: '#/components/parameters/offeringId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SlotRequest' }
+      responses:
+        '201':
+          description: Creat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SlotResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/slots/{slotId}:
+    delete:
+      tags: [slots]
+      summary: Șterge un interval nerezervat (PROVIDER, proprietar)
+      operationId: deleteSlot
+      parameters:
+        - $ref: '#/components/parameters/slotId'
+      responses:
+        '204':
+          description: Șters
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/bookings:
+    post:
+      tags: [bookings]
+      summary: Rezervă un interval (CLIENT)
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BookingRequest' }
+      responses:
+        '201':
+          description: Rezervat
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookingResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/bookings/me:
+    get:
+      tags: [bookings]
+      summary: Rezervările mele (CLIENT)
+      operationId: getMyBookings
+      responses:
+        '200':
+          description: OK, ordonate după `slot.startTime`
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BookingResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/providers/me/bookings:
+    get:
+      tags: [bookings]
+      summary: Rezervările la firma mea (PROVIDER)
+      operationId: getMyProviderBookings
+      parameters:
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: OK, ordonate după `slot.startTime`
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BookingResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/bookings/{bookingId}:
+    delete:
+      tags: [bookings]
+      summary: Anulează o rezervare (clientul ei sau furnizorul intervalului)
+      operationId: cancelBooking
+      description: Șterge rândul din `bookings`; intervalul redevine liber.
+      parameters:
+        - $ref: '#/components/parameters/bookingId'
+      responses:
+        '204':
+          description: Anulată
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Token din `/api/auth/login`. Claim-ul `role` = `CLIENT` | `PROVIDER` | `ADMIN`.'
+
+  parameters:
+    providerId:
+      name: providerId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    offeringId:
+      name: offeringId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    slotId:
+      name: slotId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    bookingId:
+      name: bookingId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+
+  responses:
+    BadRequest:
+      description: Date invalide
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+          example:
+            type: about:blank
+            title: Bad Request
+            status: 400
+            detail: Validation failed
+            instance: /api/bookings
+            errors:
+              slotId: must not be null
+    Unauthorized:
+      description: Lipsește tokenul, e invalid sau login greșit
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    Forbidden:
+      description: Rol greșit sau resursa nu e a ta
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    NotFound:
+      description: Nu există
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+          example:
+            type: about:blank
+            title: Not Found
+            status: 404
+            detail: Slot 42 not found
+            instance: /api/bookings
+    Conflict:
+      description: Încalcă o regulă de unicitate
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+          example:
+            type: about:blank
+            title: Conflict
+            status: 409
+            detail: Slot 42 is already booked
+            instance: /api/bookings
+
+  schemas:
+    Role:
+      type: string
+      enum: [CLIENT, PROVIDER, ADMIN]
+
+    RegisterRequest:
+      type: object
+      required: [email, password, fullName, role]
+      properties:
+        email: { type: string, format: email, maxLength: 255, example: ana@example.com }
+        password: { type: string, minLength: 8, maxLength: 100, example: parola123 }
+        fullName: { type: string, minLength: 1, maxLength: 100, example: Ana Pop }
+        phone: { type: [string, 'null'], maxLength: 20, example: '0722123456' }
+        role:
+          type: string
+          enum: [CLIENT, PROVIDER]
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, example: ana@example.com }
+        password: { type: string, example: parola123 }
+
+    TokenResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn]
+      properties:
+        accessToken: { type: string, example: eyJhbGciOiJIUzI1NiJ9... }
+        tokenType: { type: string, const: Bearer }
+        expiresIn: { type: integer, description: secunde, example: 3600 }
+
+    UserResponse:
+      type: object
+      required: [id, email, fullName, role, createdAt]
+      properties:
+        id: { type: integer, format: int64, example: 1 }
+        email: { type: string, example: ana@example.com }
+        fullName: { type: string, example: Ana Pop }
+        phone: { type: [string, 'null'], example: '0722123456' }
+        role: { $ref: '#/components/schemas/Role' }
+        createdAt: { type: string, example: '2026-10-14T19:30:00' }
+
+    CategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 50, example: Frizerie }
+
+    CategoryResponse:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer, format: int64, example: 1 }
+        name: { type: string, example: Frizerie }
+
+    ProviderRequest:
+      type: object
+      required: [categoryId, businessName, city, address]
+      properties:
+        categoryId: { type: integer, format: int64, example: 1 }
+        businessName: { type: string, minLength: 1, maxLength: 150, example: Barber Shop Central }
+        description: { type: [string, 'null'], example: Tuns clasic și modern }
+        city: { type: string, minLength: 1, maxLength: 100, example: Cluj-Napoca }
+        address: { type: string, minLength: 1, maxLength: 255, example: Str. Memorandumului 10 }
+
+    ProviderResponse:
+      type: object
+      required: [id, businessName, city, address, category]
+      properties:
+        id: { type: integer, format: int64, example: 3 }
+        businessName: { type: string, example: Barber Shop Central }
+        description: { type: [string, 'null'], example: Tuns clasic și modern }
+        city: { type: string, example: Cluj-Napoca }
+        address: { type: string, example: Str. Memorandumului 10 }
+        category: { $ref: '#/components/schemas/CategoryResponse' }
+
+    OfferingRequest:
+      type: object
+      required: [name, durationMinutes, price]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100, example: Tuns bărbați }
+        description: { type: [string, 'null'], example: Spălat inclus }
+        durationMinutes: { type: integer, minimum: 1, example: 30 }
+        price: { type: number, minimum: 0, example: 60.00 }
+
+    OfferingResponse:
+      type: object
+      required: [id, providerId, name, durationMinutes, price, active]
+      properties:
+        id: { type: integer, format: int64, example: 7 }
+        providerId: { type: integer, format: int64, example: 3 }
+        name: { type: string, example: Tuns bărbați }
+        description: { type: [string, 'null'], example: Spălat inclus }
+        durationMinutes: { type: integer, example: 30 }
+        price: { type: number, example: 60.00 }
+        active: { type: boolean, example: true }
+
+    SlotRequest:
+      type: object
+      required: [startTime]
+      properties:
+        startTime:
+          type: string
+          description: În viitor; nu poate exista alt interval cu același `startTime` la același serviciu.
+          example: '2026-10-20T10:00:00'
+
+    SlotResponse:
+      type: object
+      required: [id, offeringId, startTime, endTime, booked]
+      properties:
+        id: { type: integer, format: int64, example: 42 }
+        offeringId: { type: integer, format: int64, example: 7 }
+        startTime: { type: string, example: '2026-10-20T10:00:00' }
+        endTime: { type: string, example: '2026-10-20T10:30:00' }
+        booked: { type: boolean, example: false }
+
+    BookingRequest:
+      type: object
+      required: [slotId]
+      properties:
+        slotId: { type: integer, format: int64, example: 42 }
+        note: { type: [string, 'null'], maxLength: 255, example: Ajung cu 5 minute mai devreme }
+
+    BookingResponse:
+      type: object
+      required: [id, slot, offeringName, providerName, clientName, createdAt]
+      properties:
+        id: { type: integer, format: int64, example: 15 }
+        slot: { $ref: '#/components/schemas/SlotResponse' }
+        offeringName: { type: string, example: Tuns bărbați }
+        providerName: { type: string, example: Barber Shop Central }
+        clientName: { type: string, example: Ana Pop }
+        note: { type: [string, 'null'], example: Ajung cu 5 minute mai devreme }
+        createdAt: { type: string, example: '2026-10-14T19:45:00' }
+
+    ProblemDetail:
+      type: object
+      required: [title, status]
+      properties:
+        type: { type: string, example: about:blank }
+        title: { type: string, example: Conflict }
+        status: { type: integer, example: 409 }
+        detail: { type: string, example: Slot 42 is already booked }
+        instance: { type: string, example: /api/bookings }
+        errors:
+          type: object
+          description: Doar la 400 de validare — câmp → mesaj
+          additionalProperties: { type: string }
