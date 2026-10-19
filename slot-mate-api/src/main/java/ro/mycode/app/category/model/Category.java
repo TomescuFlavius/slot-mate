@@ -1,5 +1,4 @@
 package ro.mycode.app.category.model;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -10,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Entity
 @Builder
 @Data
@@ -20,7 +18,6 @@ import lombok.NoArgsConstructor;
 public class Category {
     @Id
     private Long id;
-
     @NotBlank(message = "Numele categoriei este obligatoriu")
     @Size(max = 50, message = "Numele nu poate depasi 50 de caractere")
     @Column(name = "name", nullable = false, length = 50, unique = true)
