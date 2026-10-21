@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: slot-mate API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     Time-slot booking at service providers (barbers, clinics, gyms).
     All ids are UUIDs (`string`, `format: uuid`), stored in MySQL as `BINARY(16)`.
@@ -112,43 +112,6 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
-        '409': { $ref: '#/components/responses/Conflict' }
-
-  /api/categories/{categoryId}:
-    patch:
-      tags: [categories]
-      summary: Rename a category (ADMIN)
-      operationId: updateCategory
-      parameters:
-        - $ref: '#/components/parameters/categoryId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/CategoryRequest' }
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/CategoryResponse' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
-    delete:
-      tags: [categories]
-      summary: Delete a category that no provider uses (ADMIN)
-      operationId: deleteCategory
-      parameters:
-        - $ref: '#/components/parameters/categoryId'
-      responses:
-        '204':
-          description: Deleted
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
 
   /api/providers:
@@ -477,12 +440,6 @@ components:
       description: 'Token from `/api/auth/login`. The `role` claim = `CLIENT` | `PROVIDER` | `ADMIN`.'
 
   parameters:
-    categoryId:
-      name: categoryId
-      in: path
-      required: true
-      schema: { type: string, format: uuid }
-      example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
     providerId:
       name: providerId
       in: path
@@ -602,7 +559,7 @@ components:
       type: object
       required: [name]
       properties:
-        name: { type: string, minLength: 1, maxLength: 50, example: Barber }
+        name: { type: string, minLength: 1, maxLength: 50, description: 'Unique, case-insensitive', example: Barber }
 
     CategoryResponse:
       type: object
