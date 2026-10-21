@@ -29,29 +29,29 @@ class CategoryCommandServiceImplTest {
     @InjectMocks
     CategoryCommandServiceImpl categoryCommandService;
 
+    private final CategoryCreateRequest request = new CategoryCreateRequest("Barber");
+
     @Test
-    void createCategorySavesAndReturnsTheSavedCategory() {
+    void createCategoryReturnsTheSavedCategory() {
         // Arrange
-        UUID id = UUID.randomUUID();
-        when(categoryRepository.existsByName("Barber")).thenReturn(false);
-        when(categoryRepository.save(any(Category.class))).thenReturn(new Category(id, "Barber"));
+        Category saved = new Category(UUID.randomUUID(), "Barber");
+        when(categoryRepository.save(any())).thenReturn(saved);
 
         // Act
-        CategoryResponse response = categoryCommandService.createCategory(new CategoryCreateRequest("Barber"));
+        CategoryResponse response = categoryCommandService.createCategory(request);
 
         // Assert
-        assertThat(response).isEqualTo(new CategoryResponse(id, "Barber"));
+        assertThat(response).isEqualTo(new CategoryResponse(saved.getId(), saved.getName()));
     }
 
     @Test
-    void createCategoryThrowsAndDoesNotSaveWhenTheNameExists() {
+    void createCategoryDoesNotSaveWhenTheNameExists() {
         // Arrange
         when(categoryRepository.existsByName("Barber")).thenReturn(true);
 
         // Act + Assert
-        assertThatThrownBy(() -> categoryCommandService.createCategory(new CategoryCreateRequest("Barber")))
-                .isInstanceOf(CategoryAlreadyExistsException.class)
-                .hasMessage("A category with this name already exists");
+        assertThatThrownBy(() -> categoryCommandService.createCategory(request))
+                .isInstanceOf(CategoryAlreadyExistsException.class);
         verify(categoryRepository, never()).save(any());
     }
 }

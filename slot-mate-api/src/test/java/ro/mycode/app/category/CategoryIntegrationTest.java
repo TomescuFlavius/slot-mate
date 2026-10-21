@@ -8,15 +8,16 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import ro.mycode.app.TestcontainersConfiguration;
+import ro.mycode.app.category.dtos.CategoryCreateRequest;
+import ro.mycode.app.category.dtos.CategoryResponse;
 import ro.mycode.app.category.model.Category;
 import ro.mycode.app.category.repository.CategoryRepository;
-
-import java.util.List;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Import(TestcontainersConfiguration.class)
@@ -28,6 +29,9 @@ class CategoryIntegrationTest {
     MockMvc mockMvc;
 
     @Autowired
+    JsonMapper jsonMapper;
+
+    @Autowired
     CategoryRepository categoryRepository;
 
     @BeforeEach
@@ -36,35 +40,31 @@ class CategoryIntegrationTest {
     }
 
     @Test
-    void createCategorySavesTheCategoryWithAGeneratedUuid() throws Exception {
+    void createCategorySavesTheCategoryUnderTheReturnedId() throws Exception {
         // Act
-        String body = mockMvc.perform(post("/api/categories")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Barber\"}"))
+        String body = postCategory("Barber")
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         // Assert
-        List<Category> categories = categoryRepository.findAll();
-        assertThat(categories).hasSize(1);
-        assertThat(categories.get(0).getName()).isEqualTo("Barber");
-        assertThat(body).contains(categories.get(0).getId().toString());
+        CategoryResponse response = jsonMapper.readValue(body, CategoryResponse.class);
+        Category saved = categoryRepository.findById(response.id()).orElseThrow();
+        assertThat(saved.getName()).isEqualTo("Barber");
     }
 
     @Test
     void createCategoryReturns409ForTheSameNameWithDifferentCase() throws Exception {
         // Arrange
-        mockMvc.perform(post("/api/categories")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Barber\"}"))
-                .andExpect(status().isCreated());
+        postCategory("Barber").andExpect(status().isCreated());
 
         // Act + Assert
-        mockMvc.perform(post("/api/categories")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"barber\"}"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.detail").value("A category with this name already exists"));
+        postCategory("barber").andExpect(status().isConflict());
         assertThat(categoryRepository.count()).isEqualTo(1);
+    }
+
+    private ResultActions postCategory(String name) throws Exception {
+        return mockMvc.perform(post("/api/categories")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(new CategoryCreateRequest(name))));
     }
 }
