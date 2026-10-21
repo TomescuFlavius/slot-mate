@@ -20,11 +20,4 @@ public class CategoryQueryServiceImpl implements CategoryQueryService {
         return new CategoryResponseList(CategoryMapper.toDtoList(categoryRepository.findAll()));
     }
 
-    @Override
-    public CategoryResponseList getAllCategoriesByName(String name) throws CategoryNotFoundException {
-        if(categoryRepository.findByName(name).isEmpty()) throw new  CategoryNotFoundException();
-        return new CategoryResponseList(CategoryMapper.toDtoList(categoryRepository.findByName(name)));
-    }
-
-
 }
