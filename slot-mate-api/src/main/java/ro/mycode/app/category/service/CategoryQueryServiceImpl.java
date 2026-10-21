@@ -1,7 +1,6 @@
 package ro.mycode.app.category.service;
 
 import org.springframework.stereotype.Service;
-import ro.mycode.app.category.dtos.CategoryResponse;
 import ro.mycode.app.category.dtos.CategoryResponseList;
 import ro.mycode.app.category.exceptions.CategoryNotFoundException;
 import ro.mycode.app.category.mapper.CategoryMapper;

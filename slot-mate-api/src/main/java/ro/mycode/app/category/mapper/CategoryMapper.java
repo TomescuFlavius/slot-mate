@@ -17,7 +17,6 @@ public class CategoryMapper {
 
     public static CategoryResponse toDto(Category category) {
         if (category == null) return null;
-        String name  = category.getName()  != null ? category.getName()  : null;
         return new CategoryResponse(category.getId() , category.getName());
     }
 

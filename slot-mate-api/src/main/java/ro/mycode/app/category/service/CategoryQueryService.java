@@ -1,6 +1,5 @@
 package ro.mycode.app.category.service;
 
-import ro.mycode.app.category.dtos.CategoryResponse;
 import ro.mycode.app.category.dtos.CategoryResponseList;
 import ro.mycode.app.category.exceptions.CategoryNotFoundException;
 
