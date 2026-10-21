@@ -1,5 +1,6 @@
 package ro.mycode.app.category.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ import ro.mycode.app.category.service.CategoryCommandService;
 import ro.mycode.app.category.service.CategoryQueryService;
 
 @Controller
-@RequestMapping("/api/v1/categories")
+@RequestMapping("/api/categories")
 @Slf4j
 public class CategoryController {
     private CategoryCommandService categoryCommandService;
@@ -31,9 +32,9 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.OK).body(categoryQueryService.getAllCategories());
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<CategoryResponse> addCategory(@RequestBody CategoryCreateRequest categoryCreateRequest) {
-        log.info("HTTP /api/v1/categories/add");
+    @PostMapping
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryCreateRequest categoryCreateRequest) {
+        log.info("HTTP POST /api/categories");
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryCommandService.createCategory(categoryCreateRequest));
     }
 

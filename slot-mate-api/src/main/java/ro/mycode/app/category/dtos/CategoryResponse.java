@@ -1,7 +1,9 @@
 package ro.mycode.app.category.dtos;
 
+import java.util.UUID;
+
 public record CategoryResponse(
-    Long id,
+    UUID id,
     String name
 )
 {}

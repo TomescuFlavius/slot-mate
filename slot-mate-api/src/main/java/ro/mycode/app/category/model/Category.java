@@ -1,6 +1,8 @@
 package ro.mycode.app.category.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
 @Entity
 @Builder
 @Data
@@ -17,9 +22,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "categories")
 public class Category {
     @Id
-    private Long id;
-    @NotBlank(message = "Numele categoriei este obligatoriu")
-    @Size(max = 50, message = "Numele nu poate depasi 50 de caractere")
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    @NotBlank(message = "Name is required")
+    @Size(max = 50, message = "Name must be at most 50 characters")
     @Column(name = "name", nullable = false, length = 50, unique = true)
     private String name;
 }

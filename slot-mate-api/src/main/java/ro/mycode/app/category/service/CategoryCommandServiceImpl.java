@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ro.mycode.app.category.dtos.CategoryCreateRequest;
 import ro.mycode.app.category.dtos.CategoryResponse;
 import ro.mycode.app.category.dtos.CategoryUpdateRequest;
+import ro.mycode.app.category.exceptions.CategoryAlreadyExistsException;
 import ro.mycode.app.category.exceptions.CategoryNotFoundException;
 import ro.mycode.app.category.mapper.CategoryMapper;
 import ro.mycode.app.category.model.Category;
@@ -21,9 +22,10 @@ public class CategoryCommandServiceImpl implements CategoryCommandService {
     @Transactional
     @Override
     public CategoryResponse createCategory(CategoryCreateRequest categoryCreateRequest) {
-        Category category= CategoryMapper.toEntity(categoryCreateRequest);
-        categoryRepository.save(category);
-        return CategoryMapper.toDto(category);
+        if (categoryRepository.existsByName(categoryCreateRequest.name())) throw new CategoryAlreadyExistsException();
+        Category category = CategoryMapper.toEntity(categoryCreateRequest);
+        Category savedCategory = categoryRepository.save(category);
+        return CategoryMapper.toDto(savedCategory);
     }
 
     @Transactional
