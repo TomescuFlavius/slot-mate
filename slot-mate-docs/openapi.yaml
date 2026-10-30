@@ -3,6 +3,9 @@ info:
   title: slot-mate API
   version: 1.2.0
   description: |
+    Contractul acoperă DOAR `slot-mate-api` (monolitul). Arhitectura e pe microservicii: fiecare serviciu primește
+    contractul lui OpenAPI când apare în plan. `slot-mate-agent` (asistentul, F12) → `openapi-agent.yaml`; `slot-mate-notifier` (F14) e doar consumator Kafka, fără REST.
+
     Time-slot booking at service providers (barbers, clinics, gyms).
     All ids are UUIDs (`string`, `format: uuid`), stored in MySQL as `BINARY(16)`.
     Times are local time (`LocalDateTime`), without a time zone: `2026-10-20T10:00:00`.
