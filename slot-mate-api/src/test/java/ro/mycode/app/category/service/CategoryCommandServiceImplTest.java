@@ -55,14 +55,28 @@ class CategoryCommandServiceImplTest {
     }
 
     @Test
-    void updateCategoryReturnsTheSavedCategory() throws CategoryNotFoundException {
+    void updateCategoryRenamesTheCategory() throws CategoryNotFoundException {
+        // Arrange
         Category category = new Category(UUID.randomUUID(), "Barber");
-        CategoryUpdateRequest request = new CategoryUpdateRequest("Barber");
-        when(categoryRepository.findCategoryByName(category.getName())).thenReturn(Optional.of(category));
-        CategoryResponse expected = new CategoryResponse(category.getId(), category.getName());
-        when(categoryRepository.save(any(Category.class))).thenReturn(category);
-        CategoryResponse actual= categoryCommandService.updateCategory(category.getName(), request);
-        assertEquals(expected,actual);
+        when(categoryRepository.findCategoryByName("Barber")).thenReturn(Optional.of(category));
+        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        CategoryResponse actual = categoryCommandService
+                .updateCategory("Barber", new CategoryUpdateRequest("Frizerie"));
+
+        // Assert
+        assertThat(actual).isEqualTo(new CategoryResponse(category.getId(), "Frizerie"));
+    }
+
+    @Test
+    void updateCategoryThrowsWhenTheCategoryDoesNotExist() {
+        when(categoryRepository.findCategoryByName("Barber")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryCommandService
+                .updateCategory("Barber", new CategoryUpdateRequest("Frizerie")))
+                .isInstanceOf(CategoryNotFoundException.class);
+        verify(categoryRepository, never()).save(any());
     }
 
     @Test

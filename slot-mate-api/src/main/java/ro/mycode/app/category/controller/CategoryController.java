@@ -29,19 +29,19 @@ public class CategoryController {
 
     @DeleteMapping("/delete/{name}")
     public ResponseEntity<CategoryResponse> deleteCategory(@Valid @PathVariable() String name) {
-        log.info("HTTP PUT /api/categories/delete/{} name={}", name);
+        log.info("HTTP DELETE /api/categories/delete/{} name={}", name);
         return ResponseEntity.ok().body(categoryCommandService.deleteCategory(name));
     }
 
     @GetMapping("/all")
     public ResponseEntity<CategoryResponseList> findAllCategories() {
-        log.info("HTTP /api/v1/categories/all");
+        log.info("HTTP GET /api/categories/all");
         return ResponseEntity.status(HttpStatus.OK).body(categoryQueryService.getAllCategories());
     }
 
     @PostMapping("/add")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryCreateRequest categoryCreateRequest) {
-        log.info("HTTP POST /api/categories");
+        log.info("HTTP POST /api/categories/add");
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryCommandService.createCategory(categoryCreateRequest));
     }
 
