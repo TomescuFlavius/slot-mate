@@ -32,8 +32,11 @@ public class CategoryQueryServiceTest {
     @Test
     void getCategoriesReturnsSavedCategories() {
         Category a = new Category();
+        a.setName("a");
         Category b = new Category();
+        b.setName("b");
         Category c = new Category();
+        c.setName("c");
         List<Category> categories = new ArrayList<>();
         categories.add(a);
         categories.add(b);
