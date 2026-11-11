@@ -6,7 +6,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ro.mycode.app.category.dtos.CategoryCreateRequest;
 import ro.mycode.app.category.dtos.CategoryResponse;
-import ro.mycode.app.category.dtos.CategoryUpdateRequest;
 import ro.mycode.app.category.exceptions.CategoryAlreadyExistsException;
 import ro.mycode.app.category.exceptions.CategoryNotFoundException;
 import ro.mycode.app.category.model.Category;
@@ -54,38 +53,5 @@ class CategoryCommandServiceImplTest {
         verify(categoryRepository, never()).save(any());
     }
 
-    @Test
-    void updateCategoryRenamesTheCategory() throws CategoryNotFoundException {
-        // Arrange
-        Category category = new Category(UUID.randomUUID(), "Barber");
-        when(categoryRepository.findCategoryByName("Barber")).thenReturn(Optional.of(category));
-        when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act
-        CategoryResponse actual = categoryCommandService
-                .updateCategory("Barber", new CategoryUpdateRequest("Frizerie"));
-
-        // Assert
-        assertThat(actual).isEqualTo(new CategoryResponse(category.getId(), "Frizerie"));
-    }
-
-    @Test
-    void updateCategoryThrowsWhenTheCategoryDoesNotExist() {
-        when(categoryRepository.findCategoryByName("Barber")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> categoryCommandService
-                .updateCategory("Barber", new CategoryUpdateRequest("Frizerie")))
-                .isInstanceOf(CategoryNotFoundException.class);
-        verify(categoryRepository, never()).save(any());
-    }
-
-    @Test
-    void deleteCategoryReturnsTheSavedCategory() throws CategoryNotFoundException {
-    String name = "Barber";
-    Category category = new Category(UUID.randomUUID(), "Barber");
-    when(categoryRepository.findCategoryByName(name)).thenReturn(Optional.of(category));
-    CategoryResponse expected = new CategoryResponse(category.getId(), category.getName());
-    CategoryResponse actual= categoryCommandService.deleteCategory(name);
-    assertEquals(expected,actual);
-    }
 }

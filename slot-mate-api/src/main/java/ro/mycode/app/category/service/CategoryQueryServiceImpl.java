@@ -4,7 +4,12 @@ import org.springframework.stereotype.Service;
 import ro.mycode.app.category.dtos.CategoryResponseList;
 import ro.mycode.app.category.exceptions.CategoryNotFoundException;
 import ro.mycode.app.category.mapper.CategoryMapper;
+import ro.mycode.app.category.model.Category;
 import ro.mycode.app.category.repository.CategoryRepository;
+
+import java.util.Comparator;
+import java.util.List;
+
 @Service
 public class CategoryQueryServiceImpl implements CategoryQueryService {
     private final CategoryRepository categoryRepository;
@@ -15,8 +20,12 @@ public class CategoryQueryServiceImpl implements CategoryQueryService {
 
     @Override
     public CategoryResponseList getAllCategories() throws CategoryNotFoundException {
-        if(categoryRepository.findAll().isEmpty()) throw new  CategoryNotFoundException();
-        return new CategoryResponseList(CategoryMapper.toDtoList(categoryRepository.findAll()));
+        List<Category> categories=categoryRepository.findAll();
+        if(categories.isEmpty()){
+            throw new CategoryNotFoundException();
+        }
+        categories.sort(Comparator.comparing(Category::getName));
+        return new CategoryResponseList(CategoryMapper.toDtoList(categories));
     }
 
 }

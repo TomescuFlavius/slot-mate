@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import ro.mycode.app.category.dtos.CategoryCreateRequest;
 import ro.mycode.app.category.dtos.CategoryResponse;
-import ro.mycode.app.category.dtos.CategoryUpdateRequest;
 import ro.mycode.app.category.exceptions.CategoryAlreadyExistsException;
 import ro.mycode.app.category.exceptions.CategoryNotFoundException;
 import ro.mycode.app.category.mapper.CategoryMapper;
@@ -26,24 +25,5 @@ public class CategoryCommandServiceImpl implements CategoryCommandService {
         Category category = CategoryMapper.toEntity(categoryCreateRequest);
         Category savedCategory = categoryRepository.save(category);
         return CategoryMapper.toDto(savedCategory);
-    }
-
-    @Override
-    public CategoryResponse updateCategory(String name, CategoryUpdateRequest categoryUpdateRequest) throws CategoryNotFoundException, CategoryAlreadyExistsException {
-        if (categoryRepository.findCategoryByName(name).isEmpty()) throw new CategoryNotFoundException();
-        if (categoryRepository.existsByName(categoryUpdateRequest.name())) throw new CategoryAlreadyExistsException();
-        Category category=categoryRepository.findCategoryByName(name).get();
-        if(categoryUpdateRequest.name()!=null && !categoryUpdateRequest.name().isBlank())
-            category.setName(categoryUpdateRequest.name());
-        Category savedCategory = categoryRepository.save(category);
-        return CategoryMapper.toDto(savedCategory);
-    }
-
-    @Override
-    public CategoryResponse deleteCategory(String name) throws CategoryNotFoundException {
-        if (categoryRepository.findCategoryByName(name).isEmpty()) throw new CategoryNotFoundException();
-        Category category=categoryRepository.findCategoryByName(name).get();
-        categoryRepository.delete(category);
-        return CategoryMapper.toDto(category);
     }
 }
