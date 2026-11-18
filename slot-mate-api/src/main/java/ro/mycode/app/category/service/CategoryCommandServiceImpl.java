@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ro.mycode.app.category.dtos.CategoryCreateRequest;
 import ro.mycode.app.category.dtos.CategoryResponse;
 import ro.mycode.app.category.exceptions.CategoryAlreadyExistsException;
+import ro.mycode.app.category.exceptions.CategoryNotFoundException;
 import ro.mycode.app.category.mapper.CategoryMapper;
 import ro.mycode.app.category.model.Category;
 import ro.mycode.app.category.repository.CategoryRepository;

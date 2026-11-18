@@ -7,9 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ro.mycode.app.category.dtos.CategoryCreateRequest;
 import ro.mycode.app.category.dtos.CategoryResponse;
-import ro.mycode.app.category.dtos.CategoryResponseList;
 import ro.mycode.app.category.service.CategoryCommandService;
 import ro.mycode.app.category.service.CategoryQueryService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -24,16 +25,22 @@ public class CategoryController {
 
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<CategoryResponseList> findAllCategories() {
-        log.info("HTTP /api/v1/categories/all");
-        return ResponseEntity.status(HttpStatus.OK).body(categoryQueryService.getAllCategories());
+
+
+
+    @GetMapping("")
+    public ResponseEntity<List<CategoryResponse>> findAllCategories() {
+        log.info("HTTP GET /api/categories/all");
+        return ResponseEntity.status(HttpStatus.OK).body(categoryQueryService.getAllCategories().categoryResponseList());
     }
 
-    @PostMapping
+    @PostMapping()
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryCreateRequest categoryCreateRequest) {
-        log.info("HTTP POST /api/categories");
+        log.info("HTTP POST /api/categories/");
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryCommandService.createCategory(categoryCreateRequest));
     }
+
+
+
 
 }
